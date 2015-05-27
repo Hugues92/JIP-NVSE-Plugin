@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="nvse">
+      <UniqueIdentifier>{47aaa0a9-ca04-455e-ac12-634f14bc7779}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{a9a439ee-3972-4797-86f4-841a2c42b2d6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\nvse\nvse\GameAPI.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameBSExtraData.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameData.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameExtraData.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameForms.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameObjects.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameOSDepend.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameRTTI.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameScript.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameSettings.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameTasks.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameTiles.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\GameTypes.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\InventoryInfo.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\SafeWrite.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nvse\nvse\Utilities.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.c" />
+    <ClCompile Include="jip_nvse.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\nvse\nvse\GameAPI.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameBSExtraData.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameData.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameEffects.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameExtraData.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameForms.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameObjects.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameOSDepend.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameRTTI.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameSettings.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameTasks.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameTiles.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\GameTypes.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\InventoryInfo.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\SafeWrite.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\Utilities.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="jip_nvse.h" />
+    <ClInclude Include="..\nvse\nvse\GameScript.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_actor.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_ammo.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_ammo_effect.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_aux_variable.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_class.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_climate.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_combat_style.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_effect.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_explosion.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_faction.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_global_var.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_inventory.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_land_texture.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_light.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_miscellaneous.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_package.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_projectile.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_ref_map.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_script.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_sound.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_texture_set.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_ui.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_utility.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_weapon.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_weather.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\jip_internal.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_body_part_data.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_destruction_data.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\fn_jip_ccc.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="exports.def" />
+  </ItemGroup>
+</Project>
