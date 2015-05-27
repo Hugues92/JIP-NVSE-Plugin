@@ -15,7 +15,7 @@ DEFINE_COMMAND_PLUGIN(SetActorVoiceType, "None", 0, 2, kParams_JIP_OneForm_OneOp
 DEFINE_COMMAND_PLUGIN(GetCreatureReach, "None", 0, 1, kParams_OneOptionalActorBase);
 DEFINE_COMMAND_PLUGIN(GetIsImmobile, "None", 0, 1, kParams_OneOptionalActorBase);
 DEFINE_COMMAND_PLUGIN(PickFromList, "None", 1, 3, kParams_JIP_OneList_TwoOptionalInts);
-
+;
 bool Cmd_GetActorTemplate_Execute(COMMAND_ARGS)
 {
 	UInt32 *refResult = (UInt32*)result;
