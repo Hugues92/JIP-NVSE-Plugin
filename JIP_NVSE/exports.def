@@ -1,0 +1,4 @@
+LIBRARY	"jip_nvse"
+EXPORTS
+NVSEPlugin_Query
+NVSEPlugin_Load
