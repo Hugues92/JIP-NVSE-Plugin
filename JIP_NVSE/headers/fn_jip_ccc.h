@@ -28,50 +28,36 @@ struct MapMarkers
 };
 std::vector<MapMarkers> g_mapMarkers;
 
+DataHandler *g_data;
+
 bool Cmd_CCCOnRestart_Execute(COMMAND_ARGS)
 {
 	g_CCCModIdx = DataHandler::Get()->GetModIndex("JIP Companions Command & Control.esp") << 24;
 
-	g_avatarsPath.insert({{"A L P H A", "alphadroid"}, {"Achilles of Atlanta", "achilles"}, {"Amanda", "amanda"}, {"Amata", "amata"}, 
-						{"Ambassador", "deathclaw"}, {"Andrea ARES 2-14", "andrea"}, {"Angel", "angel"}, {"Arcade Gannon", "arcade"}, 
-						{"Assemblotron", "assemblotron"}, {"B-6-RK", "b6rk"}, {"Beanbot", "beanbot"}, {"Bella", "bella"}, {"Ben Kurtz", "benkurtz"}, 
-						{"Benny", "benny"}, {"Betsy", "brahmin"}, {"Bittercup", "bittercup"}, {"Blaze", "blaze"}, {"Boone", "boone"}, 
-						{"Bradley", "bradley"}, {"Brianna", "brianna"}, {"Brisa", "brisa"}, {"Brisa Almodovar", "brisa"}, {"Bryan Wilks", "bryan"}, 
-						{"Bullets", "bullets"}, {"Butch", "butch"}, {"Cass", "cass"}, {"Charon", "charon"}, {"Cheyenne", "cheyenne"}, 
-						{"Christine", "christine"}, {"Clover", "clover"}, {"Clover Ace", "cloverace"}, {"Coffeebot", "coffeebot"}, 
-						{"Crystal", "crystal"}, {"Cyan", "cyan"}, {"Cyber-Claw", "cyberclaw"}, {"Cyberus", "cyberus"}, {"Deadpan", "deadpan"}, 
-						{"Dean Domino", "dean"}, {"Delilah", "delilah"}, {"Denver", "denver"}, {"Desmond", "desmond"}, {"Digger", "molerat"}, 
-						{"Doc Friday", "docfriday"}, {"Dog", "doggod"}, {"Dogmeat", "dogmeat"}, {"ED-E", "eyebot"}, {"Electrobot", "electrobot"}, 
-						{"Emaciated Cat", "emaciatedcat"}, {"Eric Campbell", "ericcampbell"}, {"Farsight", "mongrel"}, {"Fawkes", "fawkes"}, 
-						{"Fichebot", "fichebot"}, {"Floating Eye", "floatingeye"}, {"Follows-Chalk", "followschalk"}, {"God", "doggod"}, 
-						{"Great Jack", "greatjack"}, {"Guts", "guts"}, {"Hans", "hans"}, {"Holobot", "holobot"}, {"Hoverbot", "hoverbot"}, 
-						{"Hoverbrain", "hoverbrain"}, {"Hydrobot", "hydrobot"}, {"J.T.", "dogmeat"}, {"Jamie Campbell", "jamiecampbell"}, 
-						{"Jasmine", "jasmine"}, {"Jenifer Hale", "jeniferhale"}, {"Jericho", "jericho"}, {"Jessi", "jessi"}, {"Jocelyn", "jocelyn"}, 
-						{"Johnny Matheson", "johnnymatheson"}, {"Joshua Graham", "joshua"}, {"Jukebot", "jukebot"}, {"Kat", "kat"}, 
-						{"Kate", "bbdkate"}, {"Katie", "katie"}, {"Kelsey", "kelsey"}, {"Kira Mann", "kiramann"}, {"Lily", "lily"}, 
-						{"Lucy West", "lucywest"}, {"Malibu", "malibu"}, {"Malika Kiowa", "malika"}, {"Marcus", "marcus"}, {"Melissa", "melissa"}, 
-						{"Mezcal", "mezcal"}, {"Mika", "mika"}, {"Milton", "milton"}, {"Miria", "miria"}, {"Niner", "niner"}, {"Outcast Nitro", "nitro"}, 
-						{"Ovenbot", "ovenbot"}, {"Private Gilbert", "wendy"}, {"Projectorbot", "projectorbot"}, {"Proxima", "cyberdog"}, {"Raul", "raul"}, 
-						{"Recursobot", "recursobot"}, {"Rex", "rex"}, {"Rogue", "sentrybot"}, {"Russell", "russell"}, {"Rusty", "rusty"}, 
-						{"Safebot", "safebot"}, {"Sarah Conner", "sarahconner"}, {"Sarah Lyons", "sarahlyons"}, {"Scuttlebrain", "scuttlebrain"}, 
-						{"Sergeant RL-3", "mrgutsy"}, {"Serverbot", "serverbot"}, {"Shieldbot", "shieldbot"}, {"Shrapnel", "shrapnel"}, {"Sonia", "sonia"}, 
-						{"Star Destroyer", "brahmin"}, {"Star Paladin Cross", "cross"}, {"Sunny Smiles", "sunny"}, {"Sydney", "sydney"}, 
-						{"Teddy", "yaoguai"}, {"Teslatron", "protectron"}, {"Tess", "tess"}, {"The Highwayman", "thehighwayman"}, 
-						{"Thinktank", "thinktank"}, {"Transformer", "transformer"}, {"Turretbot", "turretbot"}, {"TVtron", "tvtron"}, 
-						{"Ulysses", "ulysses"}, {"Veronica", "veronica"}, {"Vicious Dog", "dogvicious"}, {"Waking Cloud", "wakingcloud"}, 
-						{"Wendy", "wendy"}, {"Willow", "willow"}, {"Zen", "zen"}, {"Zippy", "gecko"}, {"&PCName}, 's Best Friend", "deathclaw"}});
+	std::string line;
+	size_t delim;
 
-	g_avatarsCommon.insert({{"Alien", "alien"}, {"Ant", "giantant"}, {"Bark Scorpion", "barkscorpion"}, {"Bighorner", "bighorner"}, 
-						{"Bloatfly", "bloatfly"}, {"Brahmin", "brahmin"}, {"Cazador", "cazador"}, {"Centaur", "centaur"}, {"Coyote", "coyote"}, 
-						{"Cyber Dog", "cyberdog"}, {"Cyberdog", "cyberdog"}, {"Cyberroach", "cyberroach"}, {"Deathclaw", "deathclaw"}, 
-						{"Eyebot", "eyebot"}, {"Feral Ghoul", "ghoulferal"}, {"Gecko", "gecko"}, {"Ghoul Reaver", "ghoulreaver"}, {"Giant Rat", "giantrat"}, 
-						{"Glowing One", "ghoulglowing"}, {"Lakelurk", "mirelurk"}, {"Large Dog", "dogmeat"}, {"Lobotomite", "mechalobotomite"}, 
-						{"Mantis", "giantmantis"}, {"Mirelurk", "mirelurk"}, {"Mister Gutsy", "mrgutsy"}, {"Mister Handy", "mrgutsy"}, 
-						{"Mister Orderly", "mrgutsy"}, {"Mole Rat", "molerat"}, {"Mongrel", "mongrel"}, {"Multibot", "multibot"}, 
-						{"Night Stalker", "nightstalker"}, {"Nightstalker", "nightstalker"}, {"Nightkin", "nightkin"}, {"Protectron", "protectron"}, 
-						{"Radroach", "radroach"}, {"Radscorpion", "radscorpion"}, {"Robo-Scorpion", "roboscorpion"}, {"Robobrain", "robobrain"}, 
-						{"Securitron", "securitron"}, {"Sentry Bot", "sentrybot"}, {"Spore Carrier", "sporecarrier"}, {"Super Mutant", "supermutant"}, 
-						{"Tunneler", "tunneler"}, {"Turretbot", "miniturretbot"}, {"Wild Dog", "dogmeat"}, {"Yao Guai", "yaoguai"}});
+	std::ifstream avtListFile(g_gamePath + "data\\config\\ccc_avt_unique.ini");
+	if (avtListFile.good())
+	{
+		while (getline(avtListFile, line))
+		{
+			delim = line.find_first_of('=');
+			g_avatarsPath[line.substr(0, delim)] = line.substr(delim + 1);
+		}
+	}
+	avtListFile.close();
+
+	avtListFile.open(g_gamePath + "data\\config\\ccc_avt_common.ini");
+	if (avtListFile.good())
+	{
+		while (getline(avtListFile, line))
+		{
+			delim = line.find_first_of('=');
+			g_avatarsCommon[line.substr(0, delim)] = line.substr(delim + 1);
+		}
+	}
+	avtListFile.close();
 
 	UInt32 modIdx;
 	TESForm *form;
@@ -120,13 +106,12 @@ bool Cmd_CCCOnRestart_Execute(COMMAND_ARGS)
 		}
 	}
 
-	DataHandler *data;
 	TESWorldSpace *wspc;
 	std::vector<UInt32> *markerList;
 	TESObjectCELL::RefList::Iterator cIter;
 	TESObjectREFR *refr;
 	ExtraMapMarker *mapMkr;
-	for (auto wIter = data->Get()->worldSpaceList.Begin(); !wIter.End(); ++wIter)
+	for (auto wIter = g_data->Get()->worldSpaceList.Begin(); !wIter.End(); ++wIter)
 	{
 		if ((wspc = wIter.Get()) && wspc->cell && (wspc->texture.ddsPath.m_data || wspc->parent))
 		{
@@ -452,7 +437,7 @@ bool Cmd_CCCInfAmmoWeapon_Execute(COMMAND_ARGS)
 {
 	UInt32 *refResult = (UInt32*)result;
 	*refResult = 0;
-	TESForm *form = NULL, *clone = NULL;
+	TESForm *form = NULL;
 
 	if (!ExtractArgs(EXTRACT_ARGS, &form) || !g_infAmmoList) return true;
 
@@ -470,6 +455,7 @@ bool Cmd_CCCInfAmmoWeapon_Execute(COMMAND_ARGS)
 	TESAttackDamageForm *damageForm = DYNAMIC_CAST(form, TESForm, TESAttackDamageForm);
 	if (!damageForm) return true;
 	UInt16 damage = damageForm->damage + 1;
+	TESForm *clone = NULL;
 	if (!(clone = form->CloneForm(0)) || !(weapon = DYNAMIC_CAST(clone, TESForm, TESObjectWEAP)) ||
 		!(damageForm = DYNAMIC_CAST(clone, TESForm, TESAttackDamageForm))) return true;
 	clone->SetQuestItem(1);
@@ -697,7 +683,7 @@ bool Cmd_CCCGetReputation_Execute(COMMAND_ARGS)
 				}
 			}
 		}
-		ExtraFactionChanges *xChanges = GetByTypeCast(thisObj->extraDataList, FactionChanges);
+		ExtraFactionChanges *xChanges = (ExtraFactionChanges*)GetByTypeCast(thisObj->extraDataList, FactionChanges);
 		if (xChanges && xChanges->data)
 		{
 			for (auto refFacIt = xChanges->data->Begin(); !refFacIt.End(); ++refFacIt)
