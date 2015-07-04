@@ -11,6 +11,8 @@ DEFINE_COMMAND_PLUGIN(SetWeaponItemModEffect, "None", 0, 3, kParams_JIP_OneForm_
 DEFINE_COMMAND_PLUGIN(SetWeaponItemModValue, "None", 0, 3, kParams_JIP_OneForm_OneInt_OneFloat);
 DEFINE_COMMAND_PLUGIN(GetWeaponModReloadAnim, "None", 0, 1, kParams_OneForm);
 DEFINE_COMMAND_PLUGIN(SetWeaponModReloadAnim, "None", 0, 2, kParams_OneForm_OneInt);
+DEFINE_COMMAND_PLUGIN(GetWeaponShellCasingModel, "None", 0, 1, kParams_OneForm);
+DEFINE_COMMAND_PLUGIN(SetWeaponShellCasingModel, "None", 0, 2, kParams_JIP_OneForm_OneString);
 
 bool Cmd_GetWeaponDetectionSoundLevel_Execute(COMMAND_ARGS)
 {
@@ -57,43 +59,39 @@ public:
 
 static EquipData FindEquipped(TESObjectREFR *thisObj, FormMatcher &matcher)
 {
-	ExtraContainerChanges *xContainerChanges = static_cast<ExtraContainerChanges*>(thisObj->extraDataList.GetByType(kExtraData_ContainerChanges));
-	return (xContainerChanges) ? xContainerChanges->FindEquipped(matcher) : EquipData();
+	ExtraContainerChanges *xContainerChanges = (ExtraContainerChanges*)GetByTypeCast(thisObj->extraDataList, ContainerChanges);
+	return xContainerChanges ? xContainerChanges->FindEquipped(matcher) : EquipData();
+}
+
+UInt8 EquippedWeaponHasMod(TESObjectREFR *thisObj, UInt32 modID)
+{
+	if (!thisObj || !DYNAMIC_CAST(thisObj, TESObjectREFR, Actor)) return 0;
+	WeaponMatcher matcher;
+	EquipData eqpData = FindEquipped(thisObj, matcher);
+	if (!eqpData.pForm) return 0;
+	TESObjectWEAP *weap = DYNAMIC_CAST(eqpData.pForm, TESForm, TESObjectWEAP);
+	if (!weap) return 0;
+	if (modID == 11)
+	{
+		if (weap->unk364 == 2) return 1;
+	}
+	else if (weap->weaponFlags1.IsUnSet(4)) return 0;
+	else if (weap->weaponFlags2.IsUnSet(8192)) return 1;
+	if (!eqpData.pExtraData) return 0;
+	ExtraWeaponModFlags *xWeaponModFlags = (ExtraWeaponModFlags*)eqpData.pExtraData->GetByType(kExtraData_WeaponModFlags);
+	if (!xWeaponModFlags) return 0;
+	UInt8 modFlags = xWeaponModFlags->flags, idx = 0;
+	while (idx < 3)
+	{
+		if ((modFlags & (1 << idx)) && (weap->effectMods[idx] == modID)) return 2;
+		idx++;
+	}
+	return 0;
 }
 
 bool Cmd_IsEquippedWeaponSilenced_Eval(COMMAND_ARGS_EVAL)
 {
-	*result = 0;
-	if (thisObj && DYNAMIC_CAST(thisObj, TESObjectREFR, Actor))
-	{
-		WeaponMatcher matcher;
-		EquipData eqpData = FindEquipped(thisObj, matcher);
-		if (eqpData.pForm)
-		{
-			TESObjectWEAP *weap = DYNAMIC_CAST(eqpData.pForm, TESForm, TESObjectWEAP);
-			if (weap)
-			{
-				if (weap->unk364 == 2) *result = 1;
-				else if (eqpData.pExtraData)
-				{
-					ExtraWeaponModFlags *xWeaponModFlags = (ExtraWeaponModFlags*)eqpData.pExtraData->GetByType(kExtraData_WeaponModFlags);
-					if (xWeaponModFlags)
-					{
-						UInt8 modFlags = xWeaponModFlags->flags, idx = 0;
-						while (idx < 3)
-						{
-							if ((modFlags & (1 << idx)) && (weap->effectMods[idx] == 11))
-							{
-								*result = 2;
-								return true;
-							}
-							idx++;
-						}
-					}
-				}
-			}
-		}
-	}
+	*result = EquippedWeaponHasMod(thisObj, 11);
 	return true;
 }
 
@@ -106,37 +104,7 @@ bool Cmd_IsEquippedWeaponSilenced_Execute(COMMAND_ARGS)
 
 bool Cmd_IsEquippedWeaponScoped_Eval(COMMAND_ARGS_EVAL)
 {
-	*result = 0;
-	if (thisObj && DYNAMIC_CAST(thisObj, TESObjectREFR, Actor))
-	{
-		WeaponMatcher matcher;
-		EquipData eqpData = FindEquipped(thisObj, matcher);
-		if (eqpData.pForm)
-		{
-			TESObjectWEAP *weap = DYNAMIC_CAST(eqpData.pForm, TESForm, TESObjectWEAP);
-			if (weap && weap->weaponFlags1.IsSet(4))
-			{
-				if (weap->weaponFlags2.IsUnSet(8192)) *result = 1;
-				else if (eqpData.pExtraData)
-				{
-					ExtraWeaponModFlags *xWeaponModFlags = (ExtraWeaponModFlags*)eqpData.pExtraData->GetByType(kExtraData_WeaponModFlags);
-					if (xWeaponModFlags)
-					{
-						UInt8 modFlags = xWeaponModFlags->flags, idx = 0;
-						while (idx < 3)
-						{
-							if ((modFlags & (1 << idx)) && (weap->effectMods[idx] == 14))
-							{
-								*result = 2;
-								return true;
-							}
-							idx++;
-						}
-					}
-				}
-			}
-		}
-	}
+	*result = EquippedWeaponHasMod(thisObj, 14);
 	return true;
 }
 
@@ -300,6 +268,36 @@ bool Cmd_SetWeaponModReloadAnim_Execute(COMMAND_ARGS)
 			*result = weap->modReloadAnim;
 			weap->modReloadAnim = anim;
 		}
+	}
+	return true;
+}
+
+bool Cmd_GetWeaponShellCasingModel_Execute(COMMAND_ARGS)
+{
+	TESForm *form = NULL;
+
+	if (ExtractArgs(EXTRACT_ARGS, &form) && (form = form->TryGetREFRParent()))
+	{
+		TESObjectWEAP *weap = DYNAMIC_CAST(form, TESForm, TESObjectWEAP);
+		if (weap)
+		{
+			g_string->Assign(PASS_COMMAND_ARGS, weap->shellCasingModel.GetModelPath());
+			return true;
+		}
+	}
+	g_string->Assign(PASS_COMMAND_ARGS, "");
+	return true;
+}
+
+bool Cmd_SetWeaponShellCasingModel_Execute(COMMAND_ARGS)
+{
+	TESForm *form = NULL;
+	char nifPath[512] = {0};
+
+	if (ExtractArgs(EXTRACT_ARGS, &form, &nifPath) && (form = form->TryGetREFRParent()))
+	{
+		TESObjectWEAP *weap = DYNAMIC_CAST(form, TESForm, TESObjectWEAP);
+		if (weap) weap->shellCasingModel.SetModelPath(nifPath);
 	}
 	return true;
 }
