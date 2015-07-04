@@ -30,7 +30,6 @@
 #include "headers/fn_faction.h"
 #include "headers/fn_global_var.h"
 #include "headers/fn_inventory.h"
-#include "headers/fn_jip_ccc.h"
 #include "headers/fn_land_texture.h"
 #include "headers/fn_light.h"
 #include "headers/fn_miscellaneous.h"
@@ -45,7 +44,7 @@
 #include "headers/fn_weapon.h"
 #include "headers/fn_weather.h"
 
-IDebugLog gLog("jip_nvse.log");
+#include "headers/fn_jip_ccc.h"
 
 std::string g_lastLoadedPath;
 
@@ -103,7 +102,7 @@ void ReceivedLoadCallback(void *p)
 			{
 				nRecs--;
 				g_serialization->ReadRecordData(&buffer4, 4);
-				if (!g_serialization->ResolveRefID(buffer4, &refID) || !(form = LookupFormByID(refID)) || !GetScriptAndEventList(form, pScript, pEventList)) continue;
+				if (!g_serialization->ResolveRefID(buffer4, &refID) || !(form = LookupFormByID(refID)) || !GetScriptAndEventList(form, &pScript, &pEventList)) continue;
 				g_serialization->ReadRecordData(&nVars, 2);
 				while (nVars)
 				{
