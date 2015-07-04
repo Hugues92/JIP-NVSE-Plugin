@@ -4,34 +4,72 @@ bool NVSEPlugin_Query(const NVSEInterface *nvse, PluginInfo *info)
 {
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "JIP NVSE Plugin";
-	info->version = 13;
+	info->version = 16;
 	_MESSAGE("JIP NVSE Plugin Query\nJIP version = %d\nNVSE version = %08X", info->version, nvse->nvseVersion);
 
-	if(nvse->nvseVersion < 0x4050070)
+	if (nvse->nvseVersion < 0x4050070)
 	{
 		_ERROR("ERROR: NVSE version is outdated. This plugin requires v4.5b7 (04050070) minimum.");
 		return false;
 	}
-	if(!nvse->isEditor)
-	{
 #if RUNTIME_VERSION == RUNTIME_VERSION_1_4_0_525
-		if(nvse->runtimeVersion < RUNTIME_VERSION_1_4_0_525)
-		{
-			_ERROR("ERROR: Incorrect runtime version. This plugin requires v1.4.0.525 minimum.");
-			return false;
-		}
-#elif RUNTIME_VERSION == RUNTIME_VERSION_1_4_0_525ng
-		if (nvse->runtimeVersion < RUNTIME_VERSION_1_4_0_525ng)
-		{
-			_ERROR("ERROR: Incorrect runtime version. This plugin requires v1.4.0.525 minimum.");
-			return false;
-		}
-#endif
-	}
-	else if(nvse->editorVersion < CS_VERSION_1_4_0_518)
+	if (nvse->isEditor)
 	{
-		_ERROR("ERROR: Incorrect editor version. This plugin requires v1.4.0.518 minimum.");
+		if (nvse->editorVersion != CS_VERSION_1_4_0_518)
+		{
+			_ERROR("ERROR: Incorrect editor version. This plugin requires v1.4.0.518.");
+			return false;
+		}
+	}
+	else if (nvse->runtimeVersion != RUNTIME_VERSION_1_4_0_525)
+	{
+		_ERROR("ERROR: Incorrect runtime version. This plugin requires v1.4.0.525.");
 		return false;
+	}
+	UInt32 handle = (UInt32)GetModuleHandle("nvse_1_4.dll");
+#else
+	if (nvse->isEditor) return false;
+	if (nvse->runtimeVersion != RUNTIME_VERSION_1_4_0_525ng)
+	{
+		_ERROR("ERROR: Incorrect runtime version. This plugin requires v1.4.0.525ng.");
+		return false;
+	}
+	UInt32 handle = (UInt32)GetModuleHandle("nvse_1_4ng.dll");
+#endif
+	switch (nvse->nvseVersion)
+	{
+	case 0x4050070:
+		InventoryRefCreate = (_InventoryRefCreate)(handle + 0x14310);
+		InventoryRefGetForID = (_InventoryRefGetForID)(handle + 0x86380);
+		s_nvseInvRefGetRef = handle + 0x14390;
+		break;
+	case 0x4060010:
+		InventoryRefCreate = (_InventoryRefCreate)(handle + 0x18830);
+		InventoryRefGetForID = (_InventoryRefGetForID)(handle + 0x8A180);
+		s_nvseInvRefGetRef = handle + 0x188B0;
+		break;
+	case 0x4060020:
+		InventoryRefCreate = (_InventoryRefCreate)(handle + 0x17D20);
+		InventoryRefGetForID = (_InventoryRefGetForID)(handle + 0x8A6B0);
+		s_nvseInvRefGetRef = handle + 0x17DA0;
+		break;
+	case 0x4060030:
+		InventoryRefCreate = (_InventoryRefCreate)(handle + 0x16F20);
+		InventoryRefGetForID = (_InventoryRefGetForID)(handle + 0x8BB20);
+		s_nvseInvRefGetRef = handle + 0x16FA0;
+		break;
+	case 0x5000010:
+		InventoryRefCreate = (_InventoryRefCreate)(handle + 0x17780);
+		InventoryRefGetForID = (_InventoryRefGetForID)(handle + 0x8C2C0);
+		s_nvseInvRefGetRef = handle + 0x17800;
+		break;
+	case 0x5000020:
+		InventoryRefCreate = (_InventoryRefCreate)(handle + 0x17C20);
+		InventoryRefGetForID = (_InventoryRefGetForID)(handle + 0x8C500);
+		s_nvseInvRefGetRef = handle + 0x17CA0;
+		break;
+	default:
+		s_nvseInvRefGetRef = 0;
 	}
 	return true;
 }
@@ -271,6 +309,42 @@ bool NVSEPlugin_Load(const NVSEInterface *nvse)
 	nvse->RegisterCommand(&kCommandInfo_GetCreatureReach);
 	nvse->RegisterCommand(&kCommandInfo_GetIsImmobile);
 	nvse->RegisterCommand(&kCommandInfo_PickFromList);
+	nvse->RegisterCommand(&kCommandInfo_SetStageAlt);
+	nvse->RegisterCommand(&kCommandInfo_HasEffectShader);
+	nvse->RegisterCommand(&kCommandInfo_GetProjectileRefSource);
+	nvse->RegisterCommand(&kCommandInfo_SetProjectileRefSource);
+	nvse->RegisterCommand(&kCommandInfo_GetProjectileRefWeapon);
+	nvse->RegisterCommand(&kCommandInfo_SetProjectileRefWeapon);
+	nvse->RegisterCommand(&kCommandInfo_GetProjectileRefLifeTime);
+	nvse->RegisterCommand(&kCommandInfo_GetProjectileRefDistanceTraveled);
+	nvse->RegisterCommand(&kCommandInfo_GetProjectileRefDamage);
+	nvse->RegisterCommand(&kCommandInfo_SetProjectileRefDamage);
+	nvse->RegisterCommand(&kCommandInfo_GetProjectileRefSpeedMult);
+	nvse->RegisterCommand(&kCommandInfo_SetProjectileRefSpeedMult);
+	nvse->RegisterCommand(&kCommandInfo_SetScaleEx);
+	nvse->RegisterCommand(&kCommandInfo_GetWorldspaceFlag);
+	nvse->RegisterCommand(&kCommandInfo_SetWorldspaceFlag);
+	nvse->RegisterCommand(&kCommandInfo_SetRefEssential);
+	nvse->RegisterCommand(&kCommandInfo_ToggleCreatureModel);
+	nvse->RegisterCommand(&kCommandInfo_CreatureHasModel);
+	nvse->RegisterTypedCommand(&kCommandInfo_GetCreatureModels, kRetnType_Array);
+	nvse->RegisterCommand(&kCommandInfo_DisableNavMeshAlt);
+	nvse->RegisterCommand(&kCommandInfo_EnableNavMeshAlt);
+	nvse->RegisterCommand(&kCommandInfo_GetTerrainHeight);
+	//	14.00
+	nvse->RegisterCommand(&kCommandInfo_RefMapArrayValidate);
+	nvse->RegisterCommand(&kCommandInfo_HasPrimitive);
+	nvse->RegisterCommand(&kCommandInfo_AddPrimitive);
+	nvse->RegisterCommand(&kCommandInfo_AddDestructionStage);
+	nvse->RegisterCommand(&kCommandInfo_RemoveDestructionStage);
+	nvse->RegisterTypedCommand(&kCommandInfo_GetWeaponShellCasingModel, kRetnType_String);
+	nvse->RegisterCommand(&kCommandInfo_SetWeaponShellCasingModel);
+	nvse->RegisterCommand(&kCommandInfo_AddNewEffect);
+	nvse->RegisterCommand(&kCommandInfo_RemoveNthEffect);
+	nvse->RegisterCommand(&kCommandInfo_SetObjectEffect);
+	nvse->RegisterCommand(&kCommandInfo_GetActorUnarmedEffect);
+	nvse->RegisterCommand(&kCommandInfo_SetActorUnarmedEffect);
+	//	15.00
 	nvse->RegisterCommand(&kCommandInfo_CCCOnRestart);
 	nvse->RegisterCommand(&kCommandInfo_CCCOnLoad);
 	nvse->RegisterCommand(&kCommandInfo_CCCSetFloat);
@@ -286,6 +360,14 @@ bool NVSEPlugin_Load(const NVSEInterface *nvse)
 	nvse->RegisterCommand(&kCommandInfo_CCCSavedForm);
 	nvse->RegisterTypedCommand(&kCommandInfo_CCCLocationName, kRetnType_String);
 	nvse->RegisterCommand(&kCommandInfo_CCCGetReputation);
+	//	16.00
+	nvse->RegisterCommand(&kCommandInfo_GetSelectedItemRef);
+	nvse->RegisterCommand(&kCommandInfo_GetWeaponRefModFlags);
+	nvse->RegisterCommand(&kCommandInfo_SetWeaponRefModFlags);
+	nvse->RegisterTypedCommand(&kCommandInfo_GetBarterItems, kRetnType_Array);
+	nvse->RegisterCommand(&kCommandInfo_GetItemRefCurrentHealth);
+	nvse->RegisterCommand(&kCommandInfo_SetItemRefCurrentHealth);
+	nvse->RegisterCommand(&kCommandInfo_GetBarterGoldAlt);
 
 	if(!nvse->isEditor)
 	{
