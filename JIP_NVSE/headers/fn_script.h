@@ -24,7 +24,7 @@ std::unordered_map<UInt32, ScriptVariablesMap> g_scriptVariablesBuffer;
 struct VariableNames : std::unordered_set<std::string> {};
 std::unordered_map<UInt32, VariableNames> g_addedVariables;
 
-bool GetScriptAndEventList(TESForm *form, Script *&pScript, ScriptEventList *&pEventList)
+bool GetScriptAndEventList(TESForm *form, Script **pScript, ScriptEventList **pEventList)
 {
 	TESScriptableForm *scriptable = NULL;
 	if (form->typeID == kFormType_Quest)
@@ -33,7 +33,7 @@ bool GetScriptAndEventList(TESForm *form, Script *&pScript, ScriptEventList *&pE
 		if (quest)
 		{
 			scriptable = DYNAMIC_CAST(quest, TESQuest, TESScriptableForm);
-			pEventList = quest->scriptEventList;
+			*pEventList = quest->scriptEventList;
 		}
 	}
 	else
@@ -42,13 +42,13 @@ bool GetScriptAndEventList(TESForm *form, Script *&pScript, ScriptEventList *&pE
 		if (ref)
 		{
 			scriptable = DYNAMIC_CAST(ref->baseForm, TESForm, TESScriptableForm);
-			pEventList = ref->GetEventList();
+			*pEventList = ref->GetEventList();
 		}
 	}
-	if (scriptable && pEventList)
+	if (scriptable && *pEventList)
 	{
-		pScript = scriptable->script;
-		if (pScript) return true;
+		*pScript = scriptable->script;
+		if (*pScript) return true;
 	}
 	return false;
 }
@@ -140,7 +140,7 @@ bool ScriptVariableAction_Execute(COMMAND_ARGS, UInt8 action)
 		{
 			Script *pScript;
 			ScriptEventList *pEventList;
-			if (GetScriptAndEventList(form, pScript, pEventList) && (!action == GetVariableAdded(form->refID, varName)))
+			if (GetScriptAndEventList(form, &pScript, &pEventList) && (!action == GetVariableAdded(form->refID, varName)))
 			{
 				if (!action)
 				{
