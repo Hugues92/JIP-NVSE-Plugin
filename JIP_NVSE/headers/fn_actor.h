@@ -6,8 +6,6 @@ DEFINE_COMMAND_PLUGIN(GetCreatureDamage, "None", 0, 1, kParams_OneOptionalActorB
 DEFINE_COMMAND_PLUGIN(SetCreatureDamage, "None", 0, 2, kParams_JIP_OneInt_OneOptionalActorBase);
 DEFINE_CMD_ALT_COND_PLUGIN(GetIsPoisoned, "None", 1, 0, NULL);
 DEFINE_COMMAND_PLUGIN(GetFollowers, "None", 1, 0, NULL);
-DEFINE_COMMAND_PLUGIN(GetNumActorEffects, "None", 0, 1, kParams_OneOptionalActorBase);
-DEFINE_COMMAND_PLUGIN(GetNthActorEffect, "None", 0, 2, kParams_JIP_OneInt_OneOptionalActorBase);
 DEFINE_COMMAND_PLUGIN(GetActorLevelingData, "None", 0, 2, kParams_JIP_OneInt_OneOptionalActorBase);
 DEFINE_COMMAND_PLUGIN(SetActorLevelingData, "None", 0, 3, kParams_JIP_OneInt_OneFloat_OneOptionalActorBase);
 DEFINE_COMMAND_PLUGIN(GetActorVoiceType, "None", 0, 1, kParams_OneOptionalActorBase);
@@ -15,7 +13,11 @@ DEFINE_COMMAND_PLUGIN(SetActorVoiceType, "None", 0, 2, kParams_JIP_OneForm_OneOp
 DEFINE_COMMAND_PLUGIN(GetCreatureReach, "None", 0, 1, kParams_OneOptionalActorBase);
 DEFINE_COMMAND_PLUGIN(GetIsImmobile, "None", 0, 1, kParams_OneOptionalActorBase);
 DEFINE_COMMAND_PLUGIN(PickFromList, "None", 1, 3, kParams_JIP_OneList_TwoOptionalInts);
-;
+DEFINE_COMMAND_PLUGIN(SetRefEssential, "None", 1, 1, kParams_OneInt);
+DEFINE_COMMAND_PLUGIN(ToggleCreatureModel, "None", 0, 3, kParams_JIP_OneString_OneInt_OneOptionalActorBase);
+DEFINE_COMMAND_PLUGIN(CreatureHasModel, "None", 0, 2, kParams_JIP_OneString_OneOptionalActorBase);
+DEFINE_COMMAND_PLUGIN(GetCreatureModels, "None", 0, 1, kParams_OneOptionalActorBase);
+
 bool Cmd_GetActorTemplate_Execute(COMMAND_ARGS)
 {
 	UInt32 *refResult = (UInt32*)result;
@@ -119,53 +121,19 @@ bool Cmd_GetIsPoisoned_Execute(COMMAND_ARGS)
 
 bool Cmd_GetFollowers_Execute(COMMAND_ARGS)
 {
-	*result = 0;
 	NVSEArrayVarInterface::Array *followersArr = g_array->CreateArray(NULL, 0, scriptObj);
+	g_array->AssignCommandResult(followersArr, result);
 	if (thisObj)
 	{
 		ExtraFollower *xFollower = (ExtraFollower*)GetByTypeCast(thisObj->extraDataList, Follower);
 		if (xFollower)
 		{
 			NVSEArrayVarInterface::Element *elem;
-			ExtraFollower::FollowerNode *followerNode = xFollower->followers;
-			while (followerNode)
+			for (auto iter = xFollower->followers->Begin(); !iter.End(); ++iter)
 			{
-				elem = new NVSEArrayVarInterface::Element(followerNode->character);
+				elem = new NVSEArrayVarInterface::Element(iter.Get());
 				g_array->AppendElement(followersArr, *elem);
-				followerNode = followerNode->next;
 			}
-		}
-	}
-	g_array->AssignCommandResult(followersArr, result);
-	return true;
-}
-
-bool Cmd_GetNumActorEffects_Execute(COMMAND_ARGS)
-{
-	*result = 0;
-	TESActorBase *actorBase = NULL;
-
-	if (thisObj) actorBase = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESActorBase);
-	else ExtractArgs(EXTRACT_ARGS, &actorBase);
-
-	if (actorBase) *result = actorBase->spellList.spellList.Count();
-
-	return true;
-}
-
-bool Cmd_GetNthActorEffect_Execute(COMMAND_ARGS)
-{
-	UInt32 *refResult = (UInt32*)result, idx = 0;
-	*refResult = 0;
-	TESActorBase *actorBase = NULL;
-
-	if (ExtractArgs(EXTRACT_ARGS, &idx, &actorBase))
-	{
-		if (thisObj) actorBase = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESActorBase);
-		if (actorBase && (idx < actorBase->spellList.spellList.Count()))
-		{
-			SpellItem *splItem = actorBase->spellList.spellList.GetNthItem(idx);
-			if (splItem) *refResult = splItem->refID;
 		}
 	}
 	return true;
@@ -328,6 +296,113 @@ bool Cmd_PickFromList_Execute(COMMAND_ARGS)
 					*refResult = itmID;
 					return true;
 				}
+			}
+		}
+	}
+	return true;
+}
+
+bool Cmd_SetRefEssential_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	UInt32 flag = 0;
+
+	if (thisObj && ExtractArgs(EXTRACT_ARGS, &flag))
+	{
+		TESActorBaseData *baseData = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESActorBaseData);
+		if (baseData)
+		{
+			*result = (baseData->flags & 2) ? 1 : 0;
+			flag ? (baseData->flags |= 2) : (baseData->flags &= ~2);
+		}
+	}
+	return true;
+}
+
+SInt32 TESModelList::GetIndex(char *path)
+{
+	NameToLower(path);
+	SInt32 idx = 0;
+	for (auto iter = modelList.Begin(); !iter.End(); ++iter)
+	{
+		NameToLower(iter.Get());
+		if (!strcmp(iter.Get(), path)) return idx;
+		idx++;
+	}
+	return -1;
+}
+
+bool TESModelList::RemoveEntry(char *nifToRemove)
+{
+	SInt32 idx = GetIndex(nifToRemove);
+	if (idx == -1) return false;
+	nifToRemove = modelList.RemoveNth(idx);
+	FormHeap_Free(nifToRemove);
+	count--;
+	return true;
+}
+
+bool TESModelList::AddEntry(char *nifToAdd)
+{
+	if (GetIndex(nifToAdd) != -1) return false;
+	UInt32 newLen = strlen(nifToAdd) + 1;
+	char *newStr = (char*)FormHeap_Allocate(newLen);
+	strcpy_s(newStr, newLen, nifToAdd);
+	modelList.AddAt(newStr, eListEnd);
+	count++;
+	return true;
+}
+
+bool Cmd_ToggleCreatureModel_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	char nifPath[256] = {0};
+	UInt32 enable = 0;
+	TESActorBase *actorBase = NULL;
+
+	if (ExtractArgs(EXTRACT_ARGS, &nifPath, &enable, &actorBase))
+	{
+		TESCreature *cretr = NULL;
+		if (actorBase) cretr = DYNAMIC_CAST(actorBase, TESActorBase, TESCreature);
+		else if (thisObj) cretr = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESCreature);
+		if (cretr) *result = (enable ? cretr->modelList.AddEntry(nifPath) : cretr->modelList.RemoveEntry(nifPath)) ? 1 : 0;
+	}
+	return true;
+}
+
+bool Cmd_CreatureHasModel_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	char nifPath[256] = {0};
+	TESActorBase *actorBase = NULL;
+
+	if (ExtractArgs(EXTRACT_ARGS, &nifPath, &actorBase))
+	{
+		TESCreature *cretr = NULL;
+		if (actorBase) cretr = DYNAMIC_CAST(actorBase, TESActorBase, TESCreature);
+		else if (thisObj) cretr = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESCreature);
+		if (cretr) *result = (cretr->modelList.GetIndex(nifPath) == -1) ? 0 : 1;
+	}
+	return true;
+}
+
+bool Cmd_GetCreatureModels_Execute(COMMAND_ARGS)
+{
+	NVSEArrayVarInterface::Array *modelsArr = g_array->CreateArray(NULL, 0, scriptObj);
+	g_array->AssignCommandResult(modelsArr, result);
+	TESActorBase *actorBase = NULL;
+	if (ExtractArgs(EXTRACT_ARGS, &actorBase))
+	{
+		TESCreature *cretr = NULL;
+		if (actorBase) cretr = DYNAMIC_CAST(actorBase, TESActorBase, TESCreature);
+		else if (thisObj) cretr = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESCreature);
+		if (cretr)
+		{
+			NVSEArrayVarInterface::Element *elem;
+			for (auto iter = cretr->modelList.modelList.Begin(); !iter.End(); ++iter)
+			{
+				elem = new NVSEArrayVarInterface::Element(iter.Get());
+				g_array->AppendElement(modelsArr, *elem);
 			}
 		}
 	}
