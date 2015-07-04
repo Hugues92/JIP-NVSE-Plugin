@@ -4,6 +4,10 @@ DEFINE_COMMAND_PLUGIN(AddItemAlt, "None", 1, 3, kParams_JIP_OneObjectIDorList_On
 DEFINE_COMMAND_PLUGIN(GetValueAlt, "None", 0, 1, kParams_OneOptionalObjectID);
 DEFINE_COMMAND_PLUGIN(SetValueAlt, "None", 0, 2, kParams_OneObjectID_OneInt);
 DEFINE_COMMAND_PLUGIN(RemoveItemTarget, "None", 1, 3, kParams_JIP_OneItemOrList_OneObjectRef_OneOptionalInt);
+DEFINE_COMMAND_PLUGIN(GetWeaponRefModFlags, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(SetWeaponRefModFlags, "None", 1, 1, kParams_OneInt);
+DEFINE_COMMAND_PLUGIN(GetItemRefCurrentHealth, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(SetItemRefCurrentHealth, "None", 1, 1, kParams_OneFloat);
 
 void AddItemAlt(TESObjectREFR *target, TESForm *item, UInt32 count, float condition)
 {
@@ -157,10 +161,137 @@ bool Cmd_RemoveItemTarget_Execute(COMMAND_ARGS)
 		TESContainer *cont = DYNAMIC_CAST(thisObj->baseForm, TESForm, TESContainer);
 		if (cont && DYNAMIC_CAST(target->baseForm, TESForm, TESContainer))
 		{
-			ExtraContainerChanges *xChanges = (ExtraContainerChanges*)thisObj->extraDataList.GetByType(kExtraData_ContainerChanges);
+			ExtraContainerChanges *xChanges = (ExtraContainerChanges*)GetByTypeCast(thisObj->extraDataList, ContainerChanges);
 			RemoveItemTarget(thisObj, cont, xChanges, form, target, quantity);
 			g_processedForms.clear();
 		}
 	}
+	return true;
+}
+
+bool Cmd_GetWeaponRefModFlags_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	if (thisObj)
+	{
+		InventoryRef *iref = InventoryRefGetForID(thisObj->refID);
+		if (!iref || !iref->data.xData) return true;
+		ExtraWeaponModFlags *xModFlags = (ExtraWeaponModFlags*)iref->data.xData->GetByType(kExtraData_WeaponModFlags);
+		if (xModFlags) *result = xModFlags->flags;
+	}
+	return true;
+}
+
+bool Cmd_SetWeaponRefModFlags_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	UInt32 flags = 0;
+
+	if (!thisObj || !ExtractArgs(EXTRACT_ARGS, &flags) || !ValidInput(flags, 7)) return true;
+	InventoryRef *iref = InventoryRefGetForID(thisObj->refID);
+	if (!iref || !iref->data.type || (iref->data.type->typeID != 40) || !iref->data.entry) return true;
+	ExtraWeaponModFlags *xModFlags;
+	if (!iref->data.xData)
+	{
+		if (flags)
+		{
+			xModFlags = ExtraWeaponModFlags::Create();
+			xModFlags->flags = flags;
+			if (iref->CreateExtraData(xModFlags)) *result = 1;
+			else FormHeap_Free(xModFlags);
+		}
+		return true;
+	}
+	xModFlags = (ExtraWeaponModFlags*)iref->data.xData->GetByType(kExtraData_WeaponModFlags);
+	if (!flags)
+	{
+		if (xModFlags)
+		{
+			iref->data.xData->Remove(xModFlags);
+			FormHeap_Free(xModFlags);
+		}
+		*result = 1;
+		return true;
+	}
+	if (!xModFlags)
+	{
+		xModFlags = ExtraWeaponModFlags::Create();
+		if (!iref->data.xData->Add(xModFlags))
+		{
+			FormHeap_Free(xModFlags);
+			return true;
+		}
+	}
+	xModFlags->flags = flags;
+	*result = 1;
+	return true;
+}
+
+bool Cmd_GetItemRefCurrentHealth_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	if (thisObj)
+	{
+		InventoryRef *iref = InventoryRefGetForID(thisObj->refID);
+		if (!iref || !iref->data.type) return true;
+		TESHealthForm *healthForm = DYNAMIC_CAST(iref->data.type, TESForm, TESHealthForm);
+		if (!healthForm) return true;
+		if (iref->data.xData)
+		{
+			ExtraHealth *xHealth = (ExtraHealth*)iref->data.xData->GetByType(kExtraData_Health);
+			if (xHealth)
+			{
+				*result = xHealth->health;
+				return true;
+			}
+		}
+		*result = healthForm->health;
+	}
+	return true;
+}
+
+bool Cmd_SetItemRefCurrentHealth_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	float health = 0;
+
+	if (!thisObj || !ExtractArgs(EXTRACT_ARGS, &health)) return true;
+	InventoryRef *iref = InventoryRefGetForID(thisObj->refID);
+	if (!iref || !iref->data.type || !iref->data.entry) return true;
+	TESHealthForm *healthForm = DYNAMIC_CAST(iref->data.type, TESForm, TESHealthForm);
+	if (!healthForm) return true;
+	ExtraHealth *xHealth;
+	if (!iref->data.xData)
+	{
+		if (health < healthForm->health)
+		{
+			xHealth = ExtraHealth::Create();
+			xHealth->health = health;
+			if (iref->CreateExtraData(xHealth)) *result = 1;
+			else FormHeap_Free(xHealth);
+		}
+		return true;
+	}
+	xHealth = (ExtraHealth*)iref->data.xData->GetByType(kExtraData_Health);
+	if (health >= healthForm->health)
+	{
+		if (xHealth)
+		{
+			iref->data.xData->Remove(xHealth);
+			FormHeap_Free(xHealth);
+		}
+		return true;
+	}
+	if (!xHealth)
+	{
+		xHealth = ExtraHealth::Create();
+		if (!iref->data.xData->Add(xHealth))
+		{
+			FormHeap_Free(xHealth);
+			return true;
+		}
+	}
+	xHealth->health = health;
+	*result = 1;
 	return true;
 }
