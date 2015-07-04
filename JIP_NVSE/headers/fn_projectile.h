@@ -6,6 +6,16 @@ DEFINE_COMMAND_PLUGIN(GetProjectileFlag, "None", 0, 2, kParams_OneForm_OneInt);
 DEFINE_COMMAND_PLUGIN(SetProjectileFlag, "None", 0, 3, kParams_JIP_OneForm_TwoInts);
 DEFINE_COMMAND_PLUGIN(GetProjectileExplosion, "None", 0, 1, kParams_OneForm);
 DEFINE_COMMAND_PLUGIN(SetProjectileExplosion, "None", 0, 2, kParams_JIP_OneForm_OneOptionalForm);
+DEFINE_COMMAND_PLUGIN(GetProjectileRefSource, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(SetProjectileRefSource, "None", 1, 1, kParams_JIP_OneObjectRef);
+DEFINE_COMMAND_PLUGIN(GetProjectileRefWeapon, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(SetProjectileRefWeapon, "None", 1, 1, kParams_OneObjectID);
+DEFINE_COMMAND_PLUGIN(GetProjectileRefLifeTime, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(GetProjectileRefDistanceTraveled, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(GetProjectileRefDamage, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(SetProjectileRefDamage, "None", 1, 1, kParams_OneFloat);
+DEFINE_COMMAND_PLUGIN(GetProjectileRefSpeedMult, "None", 1, 0, NULL);
+DEFINE_COMMAND_PLUGIN(SetProjectileRefSpeedMult, "None", 1, 1, kParams_OneFloat);
 
 bool Cmd_GetProjectileTraitNumeric_Execute(COMMAND_ARGS)
 {
@@ -193,6 +203,133 @@ bool Cmd_SetProjectileExplosion_Execute(COMMAND_ARGS)
 			BGSExplosion *expl = explForm ? DYNAMIC_CAST(explForm, TESForm, BGSExplosion) : NULL;
 			if (proj->explosion) *refResult = proj->explosion->refID;
 			proj->explosion = expl;
+		}
+	}
+	return true;
+}
+
+bool ProjectileRefGet_Execute(COMMAND_ARGS, UInt8 which)
+{
+	*result = 0;
+
+	if (thisObj)
+	{
+		Projectile *proj = DYNAMIC_CAST(thisObj, TESObjectREFR, Projectile);
+		if (proj)
+		{
+			if (!which)
+			{
+				if (proj->sourceRef) *(UInt32*)result = proj->sourceRef->refID;
+			}
+			else if (which == 1)
+			{
+				if (proj->sourceWeap) *(UInt32*)result = proj->sourceWeap->refID;
+			}
+			else if (which == 2) *result = proj->elapsedTime;
+			else if (which == 3) *result = proj->distTravelled;
+			else if (which == 4) *result = proj->hitDamage;
+			else *result = proj->speedMult2;
+		}
+	}
+	return true;
+}
+
+bool Cmd_GetProjectileRefSource_Execute(COMMAND_ARGS)
+{
+	return ProjectileRefGet_Execute(PASS_COMMAND_ARGS, 0);
+}
+
+bool Cmd_GetProjectileRefWeapon_Execute(COMMAND_ARGS)
+{
+	return ProjectileRefGet_Execute(PASS_COMMAND_ARGS, 1);
+}
+
+bool Cmd_GetProjectileRefLifeTime_Execute(COMMAND_ARGS)
+{
+	return ProjectileRefGet_Execute(PASS_COMMAND_ARGS, 2);
+}
+
+bool Cmd_GetProjectileRefDistanceTraveled_Execute(COMMAND_ARGS)
+{
+	return ProjectileRefGet_Execute(PASS_COMMAND_ARGS, 3);
+}
+
+bool Cmd_GetProjectileRefDamage_Execute(COMMAND_ARGS)
+{
+	return ProjectileRefGet_Execute(PASS_COMMAND_ARGS, 4);
+}
+
+bool Cmd_GetProjectileRefSpeedMult_Execute(COMMAND_ARGS)
+{
+	return ProjectileRefGet_Execute(PASS_COMMAND_ARGS, 5);
+}
+
+bool Cmd_SetProjectileRefSource_Execute(COMMAND_ARGS)
+{
+	UInt32 *refResult = (UInt32*)result;
+	*refResult = 0;
+	TESObjectREFR *newSource = NULL;
+
+	if (thisObj && ExtractArgs(EXTRACT_ARGS, &newSource))
+	{
+		Projectile *proj = DYNAMIC_CAST(thisObj, TESObjectREFR, Projectile);
+		if (proj)
+		{
+			if (proj->sourceRef) *refResult = proj->sourceRef->refID;
+			proj->sourceRef = newSource;
+		}
+	}
+	return true;
+}
+
+bool Cmd_SetProjectileRefWeapon_Execute(COMMAND_ARGS)
+{
+	UInt32 *refResult = (UInt32*)result;
+	*refResult = 0;
+	TESForm *form = NULL;
+
+	if (thisObj && ExtractArgs(EXTRACT_ARGS, &form))
+	{
+		Projectile *proj = DYNAMIC_CAST(thisObj, TESObjectREFR, Projectile);
+		TESObjectWEAP *weap = DYNAMIC_CAST(form, TESForm, TESObjectWEAP);
+		if (proj && weap)
+		{
+			if (proj->sourceWeap) *refResult = proj->sourceWeap->refID;
+			proj->sourceWeap = weap;
+		}
+	}
+	return true;
+}
+
+bool Cmd_SetProjectileRefDamage_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	float dmg = 0;
+
+	if (thisObj && ExtractArgs(EXTRACT_ARGS, &dmg))
+	{
+		Projectile *proj = DYNAMIC_CAST(thisObj, TESObjectREFR, Projectile);
+		if (proj)
+		{
+			*result = proj->hitDamage;
+			proj->hitDamage = dmg;
+		}
+	}
+	return true;
+}
+
+bool Cmd_SetProjectileRefSpeedMult_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	float speedMult = 0;
+
+	if (thisObj && ExtractArgs(EXTRACT_ARGS, &speedMult))
+	{
+		Projectile *proj = DYNAMIC_CAST(thisObj, TESObjectREFR, Projectile);
+		if (proj)
+		{
+			*result = proj->speedMult2;
+			proj->speedMult2 = speedMult;
 		}
 	}
 	return true;
