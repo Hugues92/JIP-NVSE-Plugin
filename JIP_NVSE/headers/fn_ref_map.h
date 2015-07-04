@@ -13,6 +13,7 @@ DEFINE_COMMAND_ALT_PLUGIN(RefMapArraySetFloat, RefMapSetFlt, "None", 0, 3, kPara
 DEFINE_COMMAND_ALT_PLUGIN(RefMapArraySetRef, RefMapSetRef, "None", 0, 3, kParams_JIP_OneString_OneForm_OneOptionalForm);
 DEFINE_COMMAND_ALT_PLUGIN(RefMapArraySetString, RefMapSetStr, "None", 0, 3, kParams_JIP_TwoStrings_OneOptionalForm);
 DEFINE_COMMAND_ALT_PLUGIN(RefMapArrayErase, RefMapErase, "None", 0, 2, kParams_JIP_OneString_OneOptionalForm);
+DEFINE_COMMAND_ALT_PLUGIN(RefMapArrayValidate, RefMapValidate, "None", 0, 1, kParams_OneString);
 DEFINE_COMMAND_ALT_PLUGIN(RefMapArrayDestroy, RefMapDestroy, "None", 0, 1, kParams_OneString);
 
 struct RefMapIDsMap : std::unordered_map<UInt32, AuxVariableValue> {};
@@ -138,10 +139,10 @@ bool Cmd_RefMapArrayGetNext_Execute(COMMAND_ARGS)
 
 bool Cmd_RefMapArrayGetKeys_Execute(COMMAND_ARGS)
 {
-	*result = 0;
-	char arrName[256] = {0};
-
 	NVSEArrayVarInterface::Array *keysArr = g_array->CreateArray(NULL, 0, scriptObj);
+	g_array->AssignCommandResult(keysArr, result);
+
+	char arrName[256] = {0};
 	if (ExtractArgs(EXTRACT_ARGS, &arrName) && *arrName)
 	{
 		GetBaseParams(scriptObj, thisObj, arrName);
@@ -156,16 +157,15 @@ bool Cmd_RefMapArrayGetKeys_Execute(COMMAND_ARGS)
 			}
 		}
 	}
-	g_array->AssignCommandResult(keysArr, result);
 	return true;
 }
 
 bool Cmd_RefMapArrayGetAll_Execute(COMMAND_ARGS)
 {
-	*result = 0;
-	UInt32 type = 0;
-
 	NVSEArrayVarInterface::Array *varsMap = g_array->CreateStringMap(NULL, NULL, 0, scriptObj);
+	g_array->AssignCommandResult(varsMap, result);
+
+	UInt32 type = 0;
 	if (ExtractArgs(EXTRACT_ARGS, &type))
 	{
 		GetBaseParams(scriptObj, thisObj, type);
@@ -189,7 +189,6 @@ bool Cmd_RefMapArrayGetAll_Execute(COMMAND_ARGS)
 			}
 		}
 	}
-	g_array->AssignCommandResult(varsMap, result);
 	return true;
 }
 
@@ -242,17 +241,18 @@ bool Cmd_RefMapArraySetString_Execute(COMMAND_ARGS)
 	return RefMapArraySet_Execute(PASS_COMMAND_ARGS, 2);
 }
 
-bool RefMapArrayErase_Execute(COMMAND_ARGS, bool delKey)
+bool RefMapArrayErase_Execute(COMMAND_ARGS, UInt8 action)
 {
+	*result = -1;
 	char arrName[256] = {0};
 	TESForm *form = NULL;
 
-	if (delKey)
+	if (action)
 	{
-		if (!ExtractArgs(EXTRACT_ARGS, &arrName, &form) || !*arrName) return true;
+		if (!ExtractArgs(EXTRACT_ARGS, &arrName) || !*arrName) return true;
 	}
-	else if (!ExtractArgs(EXTRACT_ARGS, &arrName) || !*arrName) return true;
-	
+	else if (!ExtractArgs(EXTRACT_ARGS, &arrName, &form) || !*arrName) return true;
+
 	GetBaseParams(scriptObj, thisObj, arrName);
 	RefMapModsMap &target = RMTarget();
 	auto findMod = target.find(g_avModIdx);
@@ -262,18 +262,35 @@ bool RefMapArrayErase_Execute(COMMAND_ARGS, bool delKey)
 		auto findVar = findMod->second.find(arrName);
 		if (findVar != findMod->second.end())
 		{
-			if (delKey)
+			if (!action)
 			{
 				auto findID = findVar->second.find(GetCallerID(form, thisObj));
 				if (findID == findVar->second.end()) return true;
 				findID->second.DelStr();
 				findVar->second.erase(findID);
-				AVSetChanged(2);
-				if (!findVar->second.empty()) return true;
 			}
-			else AVSetChanged(2);
-			findMod->second.erase(findVar);
-			if (findMod->second.empty()) target.erase(findMod);
+			else if (action == 1)
+			{
+				auto refIter = findVar->second.begin();
+				while (refIter != findVar->second.end())
+				{
+					if (!LookupFormByID(refIter->first))
+					{
+						refIter->second.DelStr();
+						refIter = findVar->second.erase(refIter);
+						action = 0;
+					}
+					else refIter++;
+				}
+			}
+			if (action != 1) AVSetChanged(2);
+			if ((action == 2) || findVar->second.empty())
+			{
+				findMod->second.erase(findVar);
+				if (findMod->second.empty()) target.erase(findMod);
+				*result = 0;
+			}
+			else *result = findVar->second.size();
 		}
 	}
 	return true;
@@ -281,10 +298,15 @@ bool RefMapArrayErase_Execute(COMMAND_ARGS, bool delKey)
 
 bool Cmd_RefMapArrayErase_Execute(COMMAND_ARGS)
 {
-	return RefMapArrayErase_Execute(PASS_COMMAND_ARGS, true);
+	return RefMapArrayErase_Execute(PASS_COMMAND_ARGS, 0);
+}
+
+bool Cmd_RefMapArrayValidate_Execute(COMMAND_ARGS)
+{
+	return RefMapArrayErase_Execute(PASS_COMMAND_ARGS, 1);
 }
 
 bool Cmd_RefMapArrayDestroy_Execute(COMMAND_ARGS)
 {
-	return RefMapArrayErase_Execute(PASS_COMMAND_ARGS, false);
+	return RefMapArrayErase_Execute(PASS_COMMAND_ARGS, 2);
 }
